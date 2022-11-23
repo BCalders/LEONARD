@@ -12,7 +12,8 @@ function [dopV, fo, r, vel] = dopShift(startTime, stopTime, sat, gs, fe)
 %   fo - calculates the Doppler shift of the emitted frequency FE,
 %   r - returns the range between SAT and GS
 % 
-% Bas Calders 2022.
+% Bas Calders 2022 
+% Based on MathWorks source: https://nl.mathworks.com/help/satcom/ug/calculate-latency-and-doppler-in-a-satellite-scenario.html.
 % Version 1.1
 
 c = physconst("Lightspeed");
