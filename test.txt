@@ -1,0 +1,25 @@
+%% Formulas
+
+% [satPos, satVel, satAcc] = get_sat_pos_vel_acc(tow, ephFilt);
+%     
+% % e(satNr, 1) = (satPos(1) - initState(1)) / r;
+% % e(satNr, 2) = (satPos(2) - initState(2)) / r;
+% % e(satNr, 3) = (satPos(3) - initState(3)) / r;
+% e = satPos - initState(1:3);
+% rho = vecnorm(e')'; % normword of each row
+% e = e ./ rho; % [e1_x/rho1, e1_y/rho1, e1_z/rho1; e2_x/rho1, ...]
+% 
+% rhoDot = sum((satVel .* e)')';
+% rhoDotDot = sum((satAcc .* e)')';
+% 
+% eDot = (1.0 ./ rho) .* (satVel - e .* rhoDot);
+% 
+% H = [eDot, ones(length(acqSats), 1), -rhoDotDot];
+% 
+% D_predicted = -sum((e .* satVel)')' + initState(4);
+% D_measured = doppler' .* settings.c ./ 1575.42e6;
+% deltaD = D_measured' - D_predicted;
+% 
+% deltaX = H \ deltaD;
+% 
+% initState = initState + deltaX';

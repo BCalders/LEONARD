@@ -24,14 +24,13 @@ sc.AutoShow = false;
 receiver = 'CGB';       % Adding an arbitrary ground based reciever for testing purposes
 
 switch(receiver)
-    case 'CGB'
-        RECIEVER.gs = groundStation(sc, 51.17800903509613, 4.418814450257098, 'Name', "CGB - Receiver");
     case 'UC'
         RECIEVER.gs = groundStation(sc, 37.871946249596625, -122.25853766615649, 'Name', "UC - Receiver");
     case 'USYD'
         RECIEVER.gs = groundStation(sc, -33.88857476158162, 151.1873333064266, 'Name', "USYD - Receiver");
     case 'UBA'
         RECIEVER.gs = groundStation(sc, -34.59978022088964, -58.373369858300805, 'Name', "UBA - Receiver");
+    case 'CGB'
     otherwise
         RECIEVER.gs = groundStation(sc, 51.17800903509613, 4.418814450257098, 'Name', "CGB - Receiver");
 end

@@ -46,38 +46,45 @@ disp('Setup complete.')
 
 %% Calculating doppler
 disp('Calculating Doppler shift...')
-[dopv, fo, r, vel] = dopShift(startTime, stopTime, SAT.all, RECIEVER.gs, SAT.fcarrier);
-
-%% show vis
-
-groundTrack(SAT.all,"LeadTime",1200);
-sv = satelliteScenarioViewer(sc, "CameraReferenceFrame","Inertial", ...
-    "Name","DopplerVis", "ShowDetails",true, ...
-    "Basemap","colorterrain", "PlaybackSpeedMultiplier",0);
-play(sv)
+[dopv, dopFreq, r, vel] = dopShift(startTime, stopTime, SAT.all, RECIEVER.gs, SAT.fcarrier);
 
 %% Calculation
+% Define satellite positions
+satPos = [15600e3, 7540e3, 20140e3;
+    18760e3, 2750e3, 18410e3;          
+    19170e3, 14690e3, 13180e3;          
+    26560e3, 1230e3, 11270e3];
 
-[satPos, satVel, satAcc] = get_sat_pos_vel_acc(tow, ephFilt);
-    
-% e(satNr, 1) = (satPos(1) - initState(1)) / r;
-% e(satNr, 2) = (satPos(2) - initState(2)) / r;
-% e(satNr, 3) = (satPos(3) - initState(3)) / r;
+[satPos, satVel, satAcc] = get_sat_pos_vel_acc(SAT.all);
+
 e = satPos - initState(1:3);
-rho = vecnorm(e')'; % normword of each row
-e = e ./ rho; % [e1_x/rho1, e1_y/rho1, e1_z/rho1; e2_x/rho1, ...]
+rho = vecnorm(e')';
+e = e ./ rho;
 
 rhoDot = sum((satVel .* e)')';
 rhoDotDot = sum((satAcc .* e)')';
 
-eDot = (1.0 ./ rho) .* (satVel - e .* rhoDot);
-
 H = [eDot, ones(length(acqSats), 1), -rhoDotDot];
 
 D_predicted = -sum((e .* satVel)')' + initState(4);
-D_measured = doppler' .* settings.c ./ 1575.42e6;
+D_measured = dopv' .* C ./ SAT.fcarrier;
 deltaD = D_measured' - D_predicted;
 
 deltaX = H \ deltaD;
 
-initState = initState + deltaX';
+deltaRho = H*deltaX; % assuming no noise deltaRho = update of the a priori state
+
+
+%% get sat pos vel and acc
+
+function [satPos, satVel, satAcc] = get_sat_pos_vel_acc(sat)
+    [satPos,satVel] = states(sat);
+
+end
+
+% verjlaren van de variabelen
+% dopshift herwerken
+% focus op de werking niet efficientie
+% assume locatie satellieten gekend
+% 1 maart pitches -> picht moet zijn van level zodat de masterstudenten kunnen
+% volgen
