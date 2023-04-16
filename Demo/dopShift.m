@@ -41,11 +41,11 @@ for iMinute = 0:simTime
         satV(:, idxMin, logical(satVis)) = satVall(:, idxMin, logical(satVis));     % only save the values of the visible satellites
         dir(:, idxMin, :) = [cosd(el(idxMin, :)).*cosd(az(idxMin, :)); cosd(el(idxMin, :)).*sind(az(idxMin, :)); -sind(el(idxMin, :))]; % direction of the groundstation wrt gs
         dopV(idxMin, :) = dot(satV(:, idxMin, :),dir(:, idxMin, :));                % doppler velocity in m/s
-end
+    end
 
-dopV(dopV(:, :, :) == 0) = nan;                                 % Set all zeros to nan
-fo = (((c ./ (c + dopV)) * fe));                           % Calculate the Doppler shift of the emitted frequency FE
-vel = squeeze(satV());                                          % Calculate the velocity between SAT and GS
-vel(vel(:, :) == 0) = nan;                                      % Set all zeros to nan
+    dopV(dopV(:, :, :) == 0) = nan;                                 % Set all zeros to nan
+    fo = (((c ./ (c + dopV)) * fe));                           % Calculate the Doppler shift of the emitted frequency FE
+    vel = squeeze(satV());                                          % Calculate the velocity between SAT and GS
+    vel(vel(:, :) == 0) = nan;                                      % Set all zeros to nan
 end
 
