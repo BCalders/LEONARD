@@ -8,33 +8,43 @@ format compact
 format long
 
 %% Setup
-% global SAT RECIEVER C
 
-simTime = 5;
-startTime = datetime("5-july-2022 13:17");
+disp("Setting up...")
+
+simTime = 10;
+% startTime = datetime("5-july-2022 13:17");
+startTime = datetime("16-april-2023 16:05:33");
 stopTime = startTime + minutes(simTime);
 sampleTime = 60;        % has to be 60 to be compliant with function
 
 C = physconst("Lightspeed");
 
 sc = satelliteScenario(startTime, stopTime, sampleTime);
-% sc.AutoShow = false;
 
 gs = groundStation(sc, 51.17800903509613, 4.418814450257098, 'Name', "CGB - Receiver");
 gsEcefPos = lla2ecef([gs.Latitude, gs.Longitude, gs.Altitude])';
 
-SAT.all = satellite(sc, "tle/iridium.tle");     % Iridium satellites used as a testing satellite set with global coverage
+SAT.all = satellite(sc, "tle/starlink.tle");     % Iridium satellites used as a testing satellite set with global coverage
 numSats = length(SAT.all);
 SAT.femit = 1610e6;        % Avg emitted frequency in Hz used by Iridium
 satAcc = repmat([0.9, 0.9, 0.9]', [1, numSats]);
 initState = [4.6e+06, 1e+06, 4.2e+06, 0, 0];  % init pos in rome
 %[4e+06, 3e+05, 5e+06, 0, 0]; init pos in the netherlands
 
+disp("Setup complete")
+
 %% Calculate all dopplerShifts for all timepoints
+
+disp("Calculating doppler shifts...")
 
 [dopV, fobs, r, vel] = dopShift(startTime, stopTime, SAT.all, gs, SAT.femit);
 
+disp("Doppler shifts calculated")
+
 %% Calculation
+
+disp("Starting calculation...")
+
 % Define satellite position
 figure
 geoscatter(gs.Latitude, gs.Longitude, 'filled', 'MarkerFaceColor', 'r')
@@ -51,7 +61,7 @@ acStatus = accessStatus(ac);
 
 estimatedState = initState;
 
-for currTime = 1:simTime+1
+for currTime = 2:simTime+1      % start at 2 because we need information from the previous timepoint
     focussedSat = 1;  % know which satellite of the satellites in view is being focussed on
     for currSat = 1:numSats
         if acStatus(currSat, currTime) == 1         % only calculate if satellite is in view
@@ -65,6 +75,10 @@ for currTime = 1:simTime+1
             if focussedSat > 1
                 gs2satVelPrev = gs2satVel;
             else
+                % [satPos,satVel] = states(SAT.all(currSat), startTime + minutes(currTime-2), "Coordinateframe", "ecef");
+                % satPos = squeeze(satPos);
+                % satVel = squeeze(satVel);
+                % gs2satVelPrev = calcRelVel(satPos, satVel, gsEcefPos); 
                 gs2satVelPrev = 1e+04;   % arbitrarily chosen value -> tbd
             end
             gs2satVel = calcRelVel(satPos, satVel, gsEcefPos);
@@ -111,13 +125,20 @@ for currTime = 1:simTime+1
     % drawnow;
     disp("Current position: x: " + estimatedState(1) + " y: " + estimatedState(2) + " z: " + estimatedState(3))
 end
+disp("Calculation complete")
+
+disp("plotting...")
+
 geoscatter(llaState(:, 1), llaState(:, 2), 'b')
 figure;
 geoscatter(gs.Latitude, gs.Longitude, 'filled', 'MarkerFaceColor', 'r')
 hold on
-geoscatter(llaState(:, 1), llaState(:, 2), 'b')
+geoscatter(llaState(:, 1), llaState(:, 2), 'xg')
 title("Position Estimations zoom")
 geolimits([51.170833 51.1875], [4.4 4.433333])
+geobasemap('satellite')
+
+disp("I'm done!")
 
 % play(sc)  % run using F9 to show satelliteScenario
 
