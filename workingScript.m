@@ -10,7 +10,7 @@ format long
 %% Setup
 % global SAT RECIEVER C
 
-simTime = 10;
+simTime = 5;
 startTime = datetime("5-july-2022 13:17");
 stopTime = startTime + minutes(simTime);
 sampleTime = 60;        % has to be 60 to be compliant with function
@@ -45,11 +45,11 @@ geoscatter(llaState(1), llaState(2), 'filled', 'MarkerFaceColor','c')
 
 llaState = [0,0,0]; % intialization
 
-
-
 % define access for all timepoints
 ac = access(SAT.all, gs);
 acStatus = accessStatus(ac);
+
+estimatedState = initState;
 
 for currTime = 1:simTime+1
     focussedSat = 1;  % know which satellite of the satellites in view is being focussed on
@@ -65,7 +65,7 @@ for currTime = 1:simTime+1
             if focussedSat > 1
                 gs2satVelPrev = gs2satVel;
             else
-                gs2satVelPrev = .9;   % arbitrarily chosen value -> tbd
+                gs2satVelPrev = 1e+04;   % arbitrarily chosen value -> tbd
             end
             gs2satVel = calcRelVel(satPos, satVel, gsEcefPos);
             
@@ -76,14 +76,14 @@ for currTime = 1:simTime+1
             fobs = speed2Dop(SAT.femit, gs2satVel);       % observed Doppler shift (Hz)
             
             % start calculation
-            rangeVect = satPos - initState(1:3)';
+            rangeVect = satPos - estimatedState(1:3)';
             rho = vecnorm(rangeVect);
-            e = rangeVect ./ rho;
+            unitVector = rangeVect ./ rho;
             
-            rhoDot = sum(satVel .* e);
-            rhoDotDot = sum(satAcc .* e);
+            rhoDot = sum(satVel .* unitVector);
+            rhoDotDot = sum(satAcc .* unitVector);
             
-            eDot = (1.0 ./ rho) .* (satVel - e .* rhoDot);
+            eDot = (1.0 ./ rho) .* (satVel - unitVector .* rhoDot);
 
             if focussedSat > 1     % if it is the first timepoint, there is no H yet for this timepoint
                 H = [H ; eDot', 1, -rhoDotDot'];
@@ -91,7 +91,7 @@ for currTime = 1:simTime+1
                 H = [eDot', 1, -rhoDotDot'];
             end 
             
-            relVel = dot(satVel, e);                   % relative velocity (m/s)
+            relVel = dot(satVel, unitVector);                   % relative velocity (m/s)
             D_predicted = speed2Dop(SAT.femit, relVel);       % predicted Doppler shift (Hz));
             deltaDoppler = fobs(1) - D_predicted;           % deltaDoppler (Hz)
             deltaD = dop2Speed(SAT.femit, deltaDoppler);      % deltaD (m/s)
@@ -106,10 +106,10 @@ for currTime = 1:simTime+1
     end
     deltaX = H \ deltaDMatrix;                                % use of backslash operator to invert H
 
-    initState = initState + deltaX';
-    llaState(currTime, :) = ecef2lla(initState(1:3));
+    estimatedState = estimatedState + deltaX';
+    llaState(currTime, :) = ecef2lla(estimatedState(1:3));
     % drawnow;
-    disp("Current position: x: " + initState(1) + " y: " + initState(2) + " z: " + initState(3))
+    disp("Current position: x: " + estimatedState(1) + " y: " + estimatedState(2) + " z: " + estimatedState(3))
 end
 geoscatter(llaState(:, 1), llaState(:, 2), 'b')
 figure;
