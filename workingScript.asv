@@ -12,7 +12,7 @@ format long
 
 simTime = 100;
 startTime = datetime("5-july-2022 13:17");
-stopTime = startTime + seconds(simTime);
+stopTime = startTime + minutes(simTime);
 sampleTime = 60;        % has to be 60 to be compliant with function
 
 C = physconst("Lightspeed");
@@ -42,6 +42,10 @@ hold on
 llaState = ecef2lla(initState(1, 1:3));
 geoscatter(llaState(1), llaState(2), 'filled', 'MarkerFaceColor','c')
 
+sumllaState = [0,0,0]; % for avg calculation
+
+
+
 % define access for all timepoints
 ac = access(SAT.all, gs);
 acStatus = accessStatus(ac);
@@ -53,7 +57,7 @@ for currTime = 1:simTime+1
             % allSats = SAT.all(acStatus(:, currTime));
             
             % determine states of all satellites in view
-            [satPos,satVel] = states(SAT.all(currSat), startTime + mi(currTime-1), "Coordinateframe", "ecef");
+            [satPos,satVel] = states(SAT.all(currSat), startTime + minutes(currTime-1), "Coordinateframe", "ecef");
             satPos = squeeze(satPos);
             satVel = squeeze(satVel);
             
@@ -110,6 +114,9 @@ for currTime = 1:simTime+1
     initState = initState + deltaX';
     llaState = ecef2lla(initState(1:3));
     geoscatter(llaState(1), llaState(2), 'b')
+    sumllaState = sumllaState + llaState;
+    avgllaState = (sumllaState)/currTime;
+    geoscatter(avgllaState(1), avgllaState(2), 'g')
     drawnow;
     disp("Current position: x: " + initState(1) + " y: " + initState(2) + " z: " + initState(3))
 end
