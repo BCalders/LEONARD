@@ -7,6 +7,8 @@
 % difficulty. The blue dots are the estimated positions after each iteration 
 % they converge to the actual position of the ground station. The red dot
 % is the actual position of the ground station.
+% As a proof of concept the Starlink satellites are also avaliable in the
+% repo. But please note this takes a long time to run.
 
 %% init
 clear
