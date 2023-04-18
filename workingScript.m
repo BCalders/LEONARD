@@ -24,10 +24,11 @@ disp("Setting up...")
 simTime = 10;
 % startTime = datetime("5-july-2022 13:17");
 % startTime = datetime("11-september-2022 17:53");
-startTime = datetime("7-march-2023 04:22");
-% startTime = datetime("16-april-2023 16:05:33");
+% startTime = datetime("7-march-2023 04:22");
+startTime = datetime("16-april-2023 16:05:33");
 stopTime = startTime + minutes(simTime);
-sampleTime = 60;        % has to be 60 to be compliant with function
+sampleTime = 10;
+samplesPerMinute = sampleTime/60;
 
 C = physconst("Lightspeed");
 
@@ -43,6 +44,9 @@ satAcc = repmat([0.9, 0.9, 0.9]', [1, numSats]);
 initState = [4.6e+06, 1e+06, 4.2e+06, 0, 0];  % init pos in Rome for added difficulty
 %[4e+06, 3e+05, 5e+06, 0, 0]; init pos in the netherlands
 
+breakLoop = false;
+loopBroken = false;
+
 disp("Setup complete")
 
 %% Calculation
@@ -54,10 +58,8 @@ figure
 geoscatter(gs.Latitude, gs.Longitude, 'filled', 'MarkerFaceColor', 'r')
 title("Initial Position Estimations")
 hold on
-llaState = ecef2lla(initState(1, 1:3));
-geoscatter(llaState(1), llaState(2), 'filled', 'MarkerFaceColor','c')
-
-llaState = [0,0,0]; % intialization
+llaStates = ecef2lla(initState(1, 1:3));
+geoscatter(llaStates(1), llaStates(2), 'filled', 'MarkerFaceColor','c')
 
 % define access for all timepoints
 ac = access(SAT.all, gs);
@@ -115,7 +117,15 @@ for currTime = 1:simTime
             D_predicted = speed2Dop(SAT.femit, relVel);       % predicted Doppler shift (Hz));
             deltaDoppler = fobs(1) - D_predicted;           % deltaDoppler (Hz)
             deltaD = dop2Speed(SAT.femit, deltaDoppler);      % deltaD (m/s)
-            
+
+%             if deltaD == -C                             % break loops if accuracy can not become any better
+%                 disp("maximum achievable accuracy is highly likely") % TODO -> move this to time loop -> deltaDMatrix should be all C for loopbreak
+%                 if breakLoop
+%                     loopBroken = true;
+%                 end
+%                 breakLoop = true;
+%             end
+
             if focussedSat > 1     % if it is the first satellite, there is no deltaDMatrix yet for this timepoint
                 deltaDMatrix = [deltaDMatrix; deltaD];
             else
@@ -125,30 +135,45 @@ for currTime = 1:simTime
         end
     end
     deltaX = H \ deltaDMatrix;                                % use of backslash operator to invert H
-
+    
     estimatedState = estimatedState + deltaX';
-    llaState(currTime, :) = ecef2lla(estimatedState(1:3));
+    results(currTime,:) = estimatedState;
+    llaStates(currTime, :) = ecef2lla(estimatedState(1:3));
     % drawnow;
     disp(currTime + ": Current position: x: " + estimatedState(1) + " y: " + estimatedState(2) + " z: " + estimatedState(3))
+    
+    if loopBroken               % break loop when accuracy is perfect -> save calculations
+        disp("maximum achievable accuracy reached")
+        break;
+    end
 end
 disp("Calculation complete")
 
 disp("plotting...")
 
-geoscatter(llaState(:, 1), llaState(:, 2), 'b')
+geoscatter(llaStates(:, 1), llaStates(:, 2), 'b')
 figure;
 geoscatter(gs.Latitude, gs.Longitude, 'filled', 'MarkerFaceColor', 'r')
 hold on
-geoscatter(llaState(:, 1), llaState(:, 2), 'xb')
+geoscatter(llaStates(:, 1), llaStates(:, 2), 'xb')
 title("Position Estimations zoom")
 geolimits([51.170833 51.1875], [4.4 4.433333])
 % geobasemap('streets')
 
+%% plot results
+
+
+for i = 1:size(results, 1)
+    distError(i) = vecnorm(gsEcefPos - results(i, 1:3)');
+end
+figure
+plot(distError)
+
 disp("I'm done!")
 
-% play(sc)  % run using F9 to show satelliteScenario
-
 %% functions
+
+% play(sc)  % run using F9 to show satelliteScenario
 
 function [fObserved] = speed2Dop(fEmit, relativeVelocity)
     vReceiver = 0;
@@ -176,14 +201,15 @@ end
 % - Attempt this implementation for moving User
 % - First drafts for moving implementation -> to see differences with
 % performance of this algorithm
-% - Sometimes the first iteration is at coordinate 0 0 -> to be
+% x Sometimes the first iteration is at coordinate 0 0 -> to be
 % investigated => could be result of first acc estimation
-% - completely phased out dopShift function
+% x completely phased out dopShift function
 % - update Readme.md file to better image the current state of the
 % algorithm
-% - less time between measurements
-% - resultaat -> accuracy vs tijd
+% x less time between measurements
+% x resultaat -> accuracy vs tijd
 % - nieuwe UE locatie -> bestemming afrika ;)
+% - better way to break loop
 
 
 %% Notes - Solutions
@@ -192,9 +218,11 @@ end
 % -
 % -
 % -
-% - foutje bij het schrijven van resultaten -> we beginnen van time = 2
-% -
-% -
-% -
+% - foutje bij het schrijven van resultaten -> timings kwamen niet correct
+% overeen met llaState waarden 
+% - ok
+% - 
+% - hard to fix because I work in minutes not seconds
+% - first implementation done
 % -
 % -
