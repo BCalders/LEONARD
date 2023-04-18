@@ -12,8 +12,8 @@ format long
 disp("Setting up...")
 
 simTime = 10;
-% startTime = datetime("5-july-2022 13:17");
-startTime = datetime("16-april-2023 16:05:33");
+startTime = datetime("5-july-2022 13:17");
+% startTime = datetime("16-april-2023 16:05:33");
 stopTime = startTime + minutes(simTime);
 sampleTime = 60;        % has to be 60 to be compliant with function
 
@@ -24,7 +24,7 @@ sc = satelliteScenario(startTime, stopTime, sampleTime);
 gs = groundStation(sc, 51.17800903509613, 4.418814450257098, 'Name', "CGB - Receiver");
 gsEcefPos = lla2ecef([gs.Latitude, gs.Longitude, gs.Altitude])';
 
-SAT.all = satellite(sc, "tle/starlink.tle");     % Iridium satellites used as a testing satellite set with global coverage
+SAT.all = satellite(sc, "tle/iridium.tle");     % Iridium satellites used as a testing satellite set with global coverage
 numSats = length(SAT.all);
 SAT.femit = 1610e6;        % Avg emitted frequency in Hz used by Iridium
 satAcc = repmat([0.9, 0.9, 0.9]', [1, numSats]);
@@ -123,7 +123,7 @@ for currTime = 2:simTime+1      % start at 2 because we need information from th
     estimatedState = estimatedState + deltaX';
     llaState(currTime, :) = ecef2lla(estimatedState(1:3));
     % drawnow;
-    disp("Current position: x: " + estimatedState(1) + " y: " + estimatedState(2) + " z: " + estimatedState(3))
+    disp(currTime + ": Current position: x: " + estimatedState(1) + " y: " + estimatedState(2) + " z: " + estimatedState(3))
 end
 disp("Calculation complete")
 
@@ -133,10 +133,10 @@ geoscatter(llaState(:, 1), llaState(:, 2), 'b')
 figure;
 geoscatter(gs.Latitude, gs.Longitude, 'filled', 'MarkerFaceColor', 'r')
 hold on
-geoscatter(llaState(:, 1), llaState(:, 2), 'xg')
+geoscatter(llaState(:, 1), llaState(:, 2), 'xb')
 title("Position Estimations zoom")
 geolimits([51.170833 51.1875], [4.4 4.433333])
-geobasemap('satellite')
+% geobasemap('streets')
 
 disp("I'm done!")
 
@@ -161,3 +161,11 @@ function [relativeVelocity] = calcRelVel(satPos, satVel, recPos)
 
     relativeVelocity = dot(satVel, unitVector);
 end
+
+%% Notes - To Be Improved
+%
+% - First Acc value
+% - Make an error plot at different times - deviations/number of satellites used 
+% - Attempt this implementation for moving User
+% - First drafts for moving implementation -> to see differences with
+% performance of this algorithm
