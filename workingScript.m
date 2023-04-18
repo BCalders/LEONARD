@@ -23,9 +23,9 @@ disp("Setting up...")
 
 simTime = 10;
 % startTime = datetime("5-july-2022 13:17");
-% startTime = datetime("23-september-2022 17:53");
-% startTime = datetime("7-march-2023 04:22");
-startTime = datetime("16-april-2023 16:05:33");
+% startTime = datetime("11-september-2022 17:53");
+startTime = datetime("7-march-2023 04:22");
+% startTime = datetime("16-april-2023 16:05:33");
 stopTime = startTime + minutes(simTime);
 sampleTime = 60;        % has to be 60 to be compliant with function
 
@@ -65,13 +65,13 @@ acStatus = accessStatus(ac);
 
 estimatedState = initState;
 
-for currTime = 2:simTime+1                          % start at 2 because we need information from the previous timepoint
+for currTime = 1:simTime
     focussedSat = 1;                                % know which satellite in view is being focussed on
     for currSat = 1:numSats
         if acStatus(currSat, currTime) == 1         % only calculate if satellite is in view
 
             % determine satellite position and velocity
-            [satPos,satVel] = states(SAT.all(currSat), startTime + minutes(currTime-1), "Coordinateframe", "ecef");
+            [satPos,satVel] = states(SAT.all(currSat), startTime + minutes(currTime), "Coordinateframe", "ecef"); % using currtime and not currtime - 1 to ensure a previous time is present in the SC 
             satPos = squeeze(satPos);
             satVel = squeeze(satVel);
 
@@ -183,5 +183,18 @@ end
 % algorithm
 % - less time between measurements
 % - resultaat -> accuracy vs tijd
-% - nieuwe UE locatie
-% bestemming afrika ;)
+% - nieuwe UE locatie -> bestemming afrika ;)
+
+
+%% Notes - Solutions
+
+% -
+% -
+% -
+% -
+% - foutje bij het schrijven van resultaten -> we beginnen van time = 2
+% -
+% -
+% -
+% -
+% -
