@@ -24,8 +24,8 @@ disp("Setting up...")
 simTime = 10;
 % startTime = datetime("5-july-2022 13:17");
 % startTime = datetime("23-september-2022 17:53");
-startTime = datetime("7-march-2023 04:22");
-% startTime = datetime("16-april-2023 16:05:33");
+% startTime = datetime("7-march-2023 04:22");
+startTime = datetime("16-april-2023 16:05:33");
 stopTime = startTime + minutes(simTime);
 sampleTime = 60;        % has to be 60 to be compliant with function
 
@@ -171,7 +171,8 @@ end
 %% Notes - To Do
 
 % - First Acc value is now just hardcoded, should be derived correctly
-% - Make an error plot at different times - deviations/number of satellites used 
+% - Make an error plot at different ti
+% mes - deviations/number of satellites used 
 % - Attempt this implementation for moving User
 % - First drafts for moving implementation -> to see differences with
 % performance of this algorithm
@@ -180,3 +181,7 @@ end
 % - completely phased out dopShift function
 % - update Readme.md file to better image the current state of the
 % algorithm
+% - less time between measurements
+% - resultaat -> accuracy vs tijd
+% - nieuwe UE locatie
+% bestemming afrika ;)
