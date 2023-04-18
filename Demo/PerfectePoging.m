@@ -23,7 +23,7 @@ sc = satelliteScenario(startTime, stopTime, sampleTime);
 gs = groundStation(sc, 51.17800903509613, 4.418814450257098, 'Name', "CGB - Receiver");
 gsEcefPos = lla2ecef([gs.Latitude, gs.Longitude, gs.Altitude])';
 
-SAT.all = satellite(sc, "tle/iridium.tle");     % Iridium satellites used as a testing satellite set with global coverage
+SAT.all = satellite(sc, "../tle/iridium.tle");     % Iridium satellites used as a testing satellite set with global coverage
 numSats = length(SAT.all);
 SAT.femit = 1610e6;        % Avg emitted frequency in Hz used by Iridium
 satAcc = repmat([0.9, 0.9, 0.9]', [1, numSats]);

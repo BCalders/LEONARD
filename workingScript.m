@@ -1,5 +1,13 @@
 %% Doppler Localization
 
+%% Notes - Information
+
+% After running 3 different colors of dots are visible on the map. the Cyan
+% dot is the initial estimation. At this point it is set to Rome for added
+% difficulty. The blue dots are the estimated positions after each iteration 
+% they converge to the actual position of the ground station. The red dot
+% is the actual position of the ground station.
+
 %% init
 clear
 clc
@@ -12,7 +20,9 @@ format long
 disp("Setting up...")
 
 simTime = 10;
-startTime = datetime("5-july-2022 13:17");
+% startTime = datetime("5-july-2022 13:17");
+% startTime = datetime("23-september-2022 17:53");
+startTime = datetime("7-march-2023 04:22");
 % startTime = datetime("16-april-2023 16:05:33");
 stopTime = startTime + minutes(simTime);
 sampleTime = 60;        % has to be 60 to be compliant with function
@@ -28,18 +38,10 @@ SAT.all = satellite(sc, "tle/iridium.tle");     % Iridium satellites used as a t
 numSats = length(SAT.all);
 SAT.femit = 1610e6;        % Avg emitted frequency in Hz used by Iridium
 satAcc = repmat([0.9, 0.9, 0.9]', [1, numSats]);
-initState = [4.6e+06, 1e+06, 4.2e+06, 0, 0];  % init pos in rome
+initState = [4.6e+06, 1e+06, 4.2e+06, 0, 0];  % init pos in Rome for added difficulty
 %[4e+06, 3e+05, 5e+06, 0, 0]; init pos in the netherlands
 
 disp("Setup complete")
-
-%% Calculate all dopplerShifts for all timepoints
-
-disp("Calculating doppler shifts...")
-
-[dopV, fobs, r, vel] = dopShift(startTime, stopTime, SAT.all, gs, SAT.femit);
-
-disp("Doppler shifts calculated")
 
 %% Calculation
 
@@ -61,17 +63,17 @@ acStatus = accessStatus(ac);
 
 estimatedState = initState;
 
-for currTime = 2:simTime+1      % start at 2 because we need information from the previous timepoint
-    focussedSat = 1;  % know which satellite of the satellites in view is being focussed on
+for currTime = 2:simTime+1                          % start at 2 because we need information from the previous timepoint
+    focussedSat = 1;                                % know which satellite in view is being focussed on
     for currSat = 1:numSats
         if acStatus(currSat, currTime) == 1         % only calculate if satellite is in view
 
-            % determine states
+            % determine satellite position and velocity
             [satPos,satVel] = states(SAT.all(currSat), startTime + minutes(currTime-1), "Coordinateframe", "ecef");
             satPos = squeeze(satPos);
             satVel = squeeze(satVel);
 
-            % calculate vel and set previous vel
+            % setting previous velocity
             if focussedSat > 1
                 gs2satVelPrev = gs2satVel;
             else
@@ -81,6 +83,8 @@ for currTime = 2:simTime+1      % start at 2 because we need information from th
                 % gs2satVelPrev = calcRelVel(satPos, satVel, gsEcefPos); 
                 gs2satVelPrev = 1e+04;   % arbitrarily chosen value -> tbd
             end
+
+            % calculate relative velocity
             gs2satVel = calcRelVel(satPos, satVel, gsEcefPos);
             
             % calculate acceleration
@@ -162,10 +166,15 @@ function [relativeVelocity] = calcRelVel(satPos, satVel, recPos)
     relativeVelocity = dot(satVel, unitVector);
 end
 
-%% Notes - To Be Improved
-%
-% - First Acc value
+%% Notes - To Do
+
+% - First Acc value is now just hardcoded, should be derived correctly
 % - Make an error plot at different times - deviations/number of satellites used 
 % - Attempt this implementation for moving User
 % - First drafts for moving implementation -> to see differences with
 % performance of this algorithm
+% - Sometimes the first iteration is at coordinate 0 0 -> to be
+% investigated => could be result of first acc estimation
+% - completely phased out dopShift function
+% - update Readme.md file to better image the current state of the
+% algorithm
