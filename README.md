@@ -45,7 +45,6 @@ The Doppler Localization algorithm is designed to estimate the position of a UE 
           5. Calculate range vector, unit vector (e), rho, rhoDot, and rhoDotDot.
           6. Calculate eDot and append everything to the matrix H.
           7. Calculate the predicted Doppler shift, deltaDoppler, and deltaD, then append deltaD to the deltaDMatrix.
-          8. Increment the focused satellite counter.
      3. Calculate deltaX by inverting matrix H and multiplying it by deltaDMatrix.
      4. Update the estimated state with deltaX.
      5. Store the estimated state for the current time step.
