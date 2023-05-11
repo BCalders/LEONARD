@@ -34,16 +34,17 @@ c = physconst("Lightspeed");
 sc = satelliteScenario(startTime, stopTime, sampleTime);
 
 % gs = groundStation(sc, 51.17800903509613, 4.418814450257098, 'Name', "CGB - Receiver");
-% gs = groundStation(sc, 0.5108574230657834, 33.13331679803374, 'Name', "Uganda - Reciever");
-gs = groundStation(sc, -12.051334463667322, -77.012949622246, 'Name', "Peru - Reciever");
+gs = groundStation(sc, 0.5108574230657834, 33.13331679803374, 'Name', "Uganda - Reciever");
+% gs = groundStation(sc, -12.051334463667322, -77.012949622246, 'Name', "Peru - Reciever");
 gsEcefPos = lla2ecef([gs.Latitude, gs.Longitude, gs.Altitude])';
 
 % globalStar
-SAT.all = satellite(sc, "tle/globalstar.tle");     % Iridium satellites used as a testing satellite set with global coverage
+SAT.all = satellite(sc, "tle/globalstar.tle");     % GlobalStar satellites used as a testing satellite set with global coverage 
 numSats = length(SAT.all);
-SAT.femit = 1610e6;        % Avg emitted frequency in Hz used by Iridium
+SAT.femit = 16118.725e6;        % Avg emitted frequency in Hz used by GlobalStar in L-band for mobile ue
 % initState = [4.6e+06, 1e+06, 4.2e+06, 2.99, 100];  % init pos in Rome for added difficulty
-initState = [4.12e+06, -4.55e+06, -1.72e+06, 0, 0];  % init pos in Brasilia for added difficulty
+% initState = [4.12e+06, -4.55e+06, -1.72e+06, 0, 0];  % init pos in Brasilia for added difficulty
+initState = [6.13e+06, 1.68e+06, -4.9e+05, 0, 0];  % init pos in Kinshasa for added difficulty
 %[4e+06, 3e+05, 5e+06, 0, 0]; init pos in the netherlands
 
 disp("Setup complete")
@@ -130,12 +131,12 @@ disp("plotting...")
 
 names = string(1:simTime);  
 geoscatter(llaStates(:, 1), llaStates(:, 2), 'b')
-% text(llaStates(:,1),llaStates(:,2),names)
+text(llaStates(:,1),llaStates(:,2),names)
 figure;
 geoscatter(gs.Latitude, gs.Longitude, 'filled', 'MarkerFaceColor', 'r')
 hold on
 geoscatter(llaStates(:, 1), llaStates(:, 2), 'xb')
-% text(llaStates(:,1),llaStates(:,2),names)
+text(llaStates(:,1),llaStates(:,2),names)
 title("Position Estimations zoom")
 geolimits([gs.Latitude - 0.001,  gs.Latitude + 0.001], [gs.Longitude - 0.02 gs.Longitude + 0.02])
 % geobasemap('streets')
